@@ -1,0 +1,36 @@
+# ==========================================
+# 1. Environnements virtuels
+# ==========================================
+.venv/
+venv/
+env/
+ENV/
+
+# ==========================================
+# 2. Données et datasets (Très important !)
+# Les 16.5M+ lignes de vos fichiers HCRL bruts ne doivent pas aller sur GitHub
+# ==========================================
+data/raw/
+data/processed/
+
+# ==========================================
+# 3. Cache Python et compilations
+# ==========================================
+__pycache__/
+*.py*
+.ipynb_checkpoints/
+
+# ==========================================
+# 4. Streamlit et IDEs
+# ==========================================
+.streamlit/
+.vscode/
+.idea/
+*.log
+
+# ==========================================
+# 5. Modèles entraînés (Optionnel)
+# Décommentez la ligne ci-dessous si vos fichiers .joblib 
+# sont trop lourds pour GitHub (> 100 Mo)
+# ==========================================
+# models/*.joblib
