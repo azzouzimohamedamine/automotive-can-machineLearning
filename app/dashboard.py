@@ -14,7 +14,6 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
 
 # Import des modules internes du projet (avec gestion de secours robuste)
 try:
@@ -56,13 +55,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Style CSS personnalisé pour humaniser l'interface et lisser les blocs
+# Style CSS personnalisé optimisé pour une visibilité parfaite (contraste élevé et propre)
 st.markdown("""
     <style>
-        .main { background-color: #0e1117; color: #ffffff; }
-        .stMetric { background-color: #161b22; padding: 18px; border-radius: 8px; border: 1px solid #30363d; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stMetric { background-color: #1e2530; padding: 18px; border-radius: 8px; border: 1px solid #2d3748; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
         .stAlert { border-radius: 8px; }
-        h1, h2, h3 { color: #f0f6fc; }
+        h1, h2, h3 { color: #f7fafc !important; }
+        p, span, label { color: #e2e8f0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -134,7 +133,7 @@ if page == "1. Vue d'ensemble & Architecture":
         title="Répartition des classes dans les jeux de données d'entraînement",
         hole=0.4
     )
-    fig_arch.update_layout(paper_bgcolor="#0e1117", plot_bgcolor="#0e1117", font_color="white")
+    fig_arch.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white")
     st.plotly_chart(fig_arch, use_container_width=True)
 
 # ==========================================
@@ -163,7 +162,7 @@ elif page == "2. Analyse Exploratoire & Trames (EDA)":
         labels={"x": "Type de Scénario", "y": "Entropie de Shannon (bits)"},
         title="Signature Entropique des Attaques sur Bus CAN"
     )
-    fig_entropy.update_layout(paper_bgcolor="#0e1117", plot_bgcolor="#0e1117", font_color="white")
+    fig_entropy.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white")
     st.plotly_chart(fig_entropy, use_container_width=True)
 
 # ==========================================
@@ -211,55 +210,43 @@ elif page == "4. Moteur de Diagnostic ML (Inférence)":
 # ==========================================
 elif page == "5. Benchmarks & Résultats Expérimentaux":
     st.header("📈 Résultats Expérimentaux & Performances des Modèles")
-    st.write("Évaluation comparative des différents algorithmes de classification testés sur le jeu de données chronologique (80% / 20%).")
+    st.write("Importez directement vos fichiers de résultats d'évaluation (`.csv`) ou visualisez les artefacts du projet.")
 
+    # Option d'importation de fichier de résultats personnalisés
+    uploaded_results = st.file_uploader("📂 Importer votre fichier de résultats d'évaluation (.csv)", type=["csv"], key="res_uploader")
+
+    df_results = None
     results_path = "models/evaluation_results.csv"
 
-    if os.path.exists(results_path):
-        # Importation dynamique des résultats du projet
+    if uploaded_results is not None:
+        try:
+            df_results = pd.read_csv(uploaded_results)
+            st.success("✅ Fichier de résultats importé avec succès depuis votre poste !")
+        except Exception as e:
+            st.error(fErreur lors de la lecture du fichier : {e})
+    elif os.path.exists(results_path):
         df_results = pd.read_csv(results_path)
-        
+        st.info("ℹ️ Chargement automatique depuis `models/evaluation_results.csv`.")
+
+    if df_results is not None:
         st.markdown("### 📋 Tableau Comparatif des Performances")
         st.dataframe(df_results, use_container_width=True)
         
-        st.markdown("### 📊 Comparaison Graphique des F1-Scores")
-        if "Modèle" in df_results.columns and "F1_Score" in df_results.columns:
-            fig_results = px.bar(
-                df_results, x="Modèle", y="F1_Score", color="Modèle",
-                title="Performance F1-Score par Modèle d'Apprentissage",
-                range_y=[0.90, 1.0]
-            )
-            fig_results.update_layout(paper_bgcolor="#0e1117", plot_bgcolor="#0e1117", font_color="white")
-            st.plotly_chart(fig_results, use_container_width=True)
-        elif "Algorithme" in df_results.columns and "F1-Score Pondéré" in df_results.columns:
-            fig_results = px.bar(
-                df_results, x="Algorithme", y="F1-Score Pondéré", color="Algorithme",
-                title="Performance F1-Score par Modèle d'Apprentissage",
-                range_y=[0.90, 1.0]
-            )
-            fig_results.update_layout(paper_bgcolor="#0e1117", plot_bgcolor="#0e1117", font_color="white")
-            st.plotly_chart(fig_results, use_container_width=True)
-    else:
-        # Fallback élégant si le CSV n'est pas encore généré localement
-        st.info("💡 Fichier `evaluation_results.csv` non détecté dans `models/`. Affichage des résultats par défaut du PFE :")
+        st.markdown("### 📊 Comparaison Graphique des Performances")
+        # Détection automatique des colonnes pertinentes pour le graphique
+        cols = df_results.columns.tolist()
+        model_col = next((c for c in ["Modèle", "Algorithme"] if c in cols), cols[0])
+        score_col = next((c for c in ["F1_Score", "F1-Score Pondéré", "Accuracy", "Exactitude"] if c in cols), cols[1])
         
-        metrics_df = pd.DataFrame({
-            "Algorithme": ["Decision Tree", "Random Forest", "XGBoost Classifier (Optimisé)"],
-            "Exactitude (Accuracy)": [0.965, 0.994, 0.998],
-            "Précision (Precision)": [0.961, 0.993, 0.997],
-            "Rappel (Recall)": [0.965, 0.994, 0.998],
-            "F1-Score Pondéré": [0.963, 0.994, 0.998],
-            "Latence Inférence (ms)": [0.4, 1.8, 2.1]
-        })
-        st.dataframe(metrics_df, use_container_width=True)
-        
-        fig_bar = px.bar(
-            metrics_df, x="Algorithme", y="F1-Score Pondéré", 
-            color="Algorithme", title="Comparaison des F1-Scores (Modèles PFE)",
-            range_y=[0.90, 1.0]
+        fig_results = px.bar(
+            df_results, x=model_col, y=score_col, color=model_col,
+            title=f"Comparaison de la métrique ({score_col}) par modèle",
+            range_y=[0.0, 1.05]
         )
-        fig_bar.update_layout(paper_bgcolor="#0e1117", plot_bgcolor="#0e1117", font_color="white")
-        st.plotly_chart(fig_bar, use_container_width=True)
+        fig_results.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white")
+        st.plotly_chart(fig_results, use_container_width=True)
+    else:
+        st.warning("⚠️ Aucun fichier de résultats trouvé. Veuillez importer un fichier CSV ci-dessus ou placer le fichier `evaluation_results.csv` dans le dossier `models/`.")
 
 # ==========================================
 # MODULE 6 : SIMULATION D'ATTAQUES
@@ -287,7 +274,6 @@ elif page == "6. Laboratoire de Simulation d'Attaques":
         
         st.info(f"**Trame générée |** ID CAN : `0x{frame.get('can_id', '184')}` | Données : `{frame.get('data', 'N/A')}`")
         
-        # Vecteur de caractéristiques factice pour l'inférence
         input_feat = {"can_id_enc": 1, "dlc": 8, "data_0": 100, "data_1": 50, "time_delta": 0.01, "message_frequency": 100.0, "byte_mean": 22.5, "payload_entropy": 1.2}
 
         engine = DiagnosticEngine()
