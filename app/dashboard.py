@@ -19,7 +19,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 # Ensuite, vos imports habituels fonctionneront sans broncher :
-from simulation.can_generator import CANSimulator
+
 # Configuration de la page
 st.set_page_config(
     page_title="Automotive CAN Bus Diagnostic & Security Suite",
