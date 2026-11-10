@@ -111,4 +111,4 @@ streamlit run app/dashboard.py
 ---
 # Automotive Cyber-Physical Diagnostic & CAN Bus Intrusion Suite
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://VOTRE-URL-STREAMLIT.streamlit.app)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://automotive-can-machinelearning-bcjxwfq4kucc5siucjdq2p.streamlit.app/)
