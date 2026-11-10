@@ -12,6 +12,16 @@ from simulation.can_generator import CANSimulator
 from src.inference import DiagnosticEngine
 import sys
 from pathlib import Path
+import sys
+from pathlib import Path
+
+# Force Python à reconnaître la racine du projet peu importe où Streamlit l'exécute
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
+# Vos imports normaux viennent juste après :
+from simulation.can_generator import CANSimulator
 
 # Ajoute la racine du projet au chemin de recherche Python
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -19,7 +29,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
 # Ensuite, vos imports habituels fonctionneront sans broncher :
-
+from simulation.can_generator import CANSimulator
 # Configuration de la page
 st.set_page_config(
     page_title="Automotive CAN Bus Diagnostic & Security Suite",
