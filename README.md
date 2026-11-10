@@ -4,7 +4,7 @@ A research-grade 4th-year engineering project for automotive CAN bus anomaly det
 
 ---
 
-## 🛠️ Project Architecture & Structure
+## Project Architecture & Structure
 ```text
 automotive-can-ml-diagnostic/
 │
@@ -60,7 +60,7 @@ automotive-can-ml-diagnostic/
 
 ---
 
-## 📊 Dataset Integration: HCRL Car Hacking Benchmark
+##  Dataset Integration: HCRL Car Hacking Benchmark
 
 This framework fully supports the **Car Hacking Dataset (HCRL - Korea University)**.
 
@@ -78,7 +78,7 @@ This framework fully supports the **Car Hacking Dataset (HCRL - Korea University
 
 ---
 
-## 🚀 Quickstart Guide (PowerShell Commands)
+## Quickstart Guide (PowerShell Commands)
 
 ### 1. Virtual Environment Setup
 ```powershell
@@ -109,16 +109,6 @@ streamlit run app/dashboard.py
 ```
 
 ---
+# Automotive Cyber-Physical Diagnostic & CAN Bus Intrusion Suite
 
-## 📌 Recommended Git Commit Strategy
-
-```powershell
-git add .gitignore README.md requirements.txt
-git commit -m "chore: update documentation and project configuration for HCRL dataset integration"
-
-git add src/ simulation/ app/ tests/
-git commit -m "feat: enhance modular CAN diagnostic engine, simulator, and Streamlit dashboard"
-
-git add report/ notebooks/ docs/
-git commit -m "docs: updated LaTeX scientific report and research documentation"
-```
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://VOTRE-URL-STREAMLIT.streamlit.app)
