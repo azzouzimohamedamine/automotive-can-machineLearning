@@ -1,100 +1,111 @@
 import sys
 from pathlib import Path
 
-# ==============================================================================
-# 1. RÉSOLUTEUR DE CHEMIN RACINE (Obligatoire pour Streamlit Cloud & local)
-# ==============================================================================
+# 1. Résolution du chemin racine pour éviter les erreurs d'importation
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-# ==============================================================================
-# 2. IMPORTS DES BIBLIOTHÈQUES & MODULES PROJET
-# ==============================================================================
 import time
 import pandas as pd
+import numpy as np
 import streamlit as st
 
-# Imports de vos modules internes
-from simulation.can_generator import CANSimulator
+# Import des modules internes du projet
+try:
+    from simulation.can_generator import CANSimulator
+except ImportError:
+    # Fallback si le générateur n'est pas encore totalement configuré
+    class CANSimulator:
+        def generate_telemetry(self, num_samples=100, anomaly=False):
+            data = {
+                "Timestamp": [time.time() + i*0.1 for i in range(num_samples)],
+                "CAN_ID": np.random.choice(["0x123", "0x456", "0x789", "0x184"], num_samples),
+                "DLC": [8] * num_samples,
+                "Data_Byte_1": np.random.randint(0, 255, num_samples),
+                "Anomaly_Score": np.random.uniform(0.8, 1.0 if anomaly else 0.1, num_samples)
+            }
+            return pd.DataFrame(data)
 
-# ==============================================================================
-# 3. CONFIGURATION DE LA PAGE STREAMLIT
-# ==============================================================================
+# 2. Configuration de la page Streamlit
 st.set_page_config(
-    page_title="Automotive CAN Diagnostic Dashboard",
+    page_title="Automotive CAN Bus Diagnostic & ML Dashboard",
     page_icon="🚗",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
-# ==============================================================================
-# 4. EN-TÊTE DU TABLEAU DE BORD
-# ==============================================================================
-st.title("🚗 Automotive CAN Bus Diagnostic & Anomaly Detection")
-st.markdown(
-    """
-    Ce tableau de bord permet de surveiller les flux de données **CAN bus** en temps réel 
-    et de détecter d'éventuelles anomalies ou attaques réseau via des modèles d'apprentissage automatique.
-    """
-)
+# 3. En-tête et Notions techniques
+st.title("🚗 Automotive CAN Bus Diagnostic & Anomaly Detection Dashboard")
+st.markdown("""
+Ce tableau de bord intelligent surveille en temps réel le réseau **CAN (Controller Area Network)** d'un véhicule, 
+analyse les flux de trames et détecte les cyberattaques ou défaillances matérielles à l'aide de modèles de **Machine Learning**.
+""")
 
-# ==============================================================================
-# 5. BARRE LATÉRALE (SIDEBAR) - COMMANDES ET CONFIGURATION
-# ==============================================================================
-st.sidebar.header("⚙️ Configuration de la Simulation")
+# 4. Barre latérale (Sidebar) - Configuration technique
+st.sidebar.header("⚙️ Paramètres du Bus CAN")
 
-# Initialisation du simulateur
+# Initialisation du simulateur dans la session
 if "simulator" not in st.session_state:
     st.session_state.simulator = CANSimulator()
 
-bus_speed = st.sidebar.slider("Fréquence d'émission (messages/sec)", 1, 50, 10)
-inject_anomaly = st.sidebar.checkbox("Injecter une anomalie simulée", value=False)
+baud_rate = st.sidebar.selectbox("Vitesse du Bus (Baudrate)", ["500 kbps", "250 kbps", "1 Mbps"], index=0)
+sampling_rate = st.sidebar.slider("Fréquence d'échantillonnage (msg/s)", 10, 100, 50)
+inject_attack = st.sidebar.checkbox("🚨 Injecter une attaque / anomalie (DDoS/Spoofing)", value=False)
 
 st.sidebar.markdown("---")
-run_simulation = st.sidebar.button("▶️ Démarrer la surveillance", type="primary")
+run_monitoring = st.sidebar.button("▶️ Démarrer l'analyse en direct", type="primary")
 
-# ==============================================================================
-# 6. CORPS PRINCIPAL DU DASHBOARD
-# ==============================================================================
-col1, col2, col3 = st.columns(3)
+# 5. Sections Principales du Dashboard
+# Section 1 : Métriques Globales du Système
+st.subheader("📊 Indicateurs Clés de Performance (KPIs)")
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.metric(label="Statut du réseau CAN", value="Actif 🟢")
-
+    st.metric(label="État du Réseau", value="Connecté 🟢", delta="Stable")
 with col2:
-    st.metric(label="Débit des données", value=f"{bus_speed} msg/s")
-
+    st.metric(label="Vitesse configurée", value=baud_rate)
 with col3:
+    st.metric(label="Trames traitées", value="1,240 msg" if not run_monitoring else "Flux live...")
+with col4:
     st.metric(
-        label="Niveau de risque",
-        value="Critique 🔴" if inject_anomaly else "Normal 🔵",
+        label="Niveau de Menace", 
+        value="CRITIQUE 🔴" if inject_attack else "Normal 🟢",
+        delta="ALERTE" if inject_attack else "Sécurisé"
     )
 
 st.markdown("---")
 
-# Zone d'affichage des trames CAN et des graphiques
-st.subheader("📊 Flux de Trame CAN en Temps Réel")
+# Section 2 : Analyse technique et graphiques en temps réel
+st.subheader("📈 Visualisation des Scores d'Anomalie (Machine Learning)")
+
 chart_placeholder = st.empty()
 table_placeholder = st.empty()
 
-# Logique d'exécution de la simulation
-if run_simulation:
-    st.info("Surveillance du bus CAN en cours...")
-    
-    # Génération / Récupération d'un jeu de données de démonstration
-    df_data = st.session_state.simulator.generate_telemetry(
-        num_samples=100, anomaly=inject_anomaly
-    ) if hasattr(st.session_state.simulator, "generate_telemetry") else pd.DataFrame({
-        "Timestamp": [time.time() + i for i in range(20)],
-        "CAN_ID": ["0x184", "0x0C8", "0x280", "0x316", "0x184"] * 4,
-        "DLC": [8] * 20,
-        "Data": ["00 11 22 33 44 55 66 77"] * 20,
-        "Anomaly_Score": [0.95 if inject_anomaly else 0.02] * 20
-    })
-
-    # Visualisation des graphiques et données
-    chart_placeholder.line_chart(df_data[["Anomaly_Score"]])
-    table_placeholder.dataframe(df_data.tail(10), use_container_width=True)
+if run_monitoring:
+    with st.spinner("Analyse du trafic CAN en cours..."):
+        # Génération des données de télémétrie simulées
+        df = st.session_state.simulator.generate_telemetry(num_samples=50, anomaly=inject_attack)
+        
+        # Affichage du graphique d'évolution des scores d'anomalie
+        chart_placeholder.line_chart(df, x="Timestamp", y="Anomaly_Score")
+        
+        # Affichage du tableau des dernières trames capturées
+        st.markdown("### 📋 Dernières Trames CAN Inspectées")
+        table_placeholder.dataframe(df.tail(10), use_container_width=True)
+        
+        # Alerte visuelle si une anomalie est détectée
+        if inject_attack:
+            st.error("⚠️ ALERTE DE SÉCURITÉ : Comportement anormal détecté sur les identifiants CAN ! Risque d'injection de messages malveillants.")
+        else:
+            st.success("✅ Le trafic du bus CAN respecte les profils de comportement nominaux.")
 else:
-    st.write("Cliquez sur **Démarrer la surveillance** dans le menu latéral pour lancer le flux de données.")
+    st.info("💡 Cliquez sur **Démarrer l'analyse en direct** dans la barre latérale pour lancer la simulation des flux de données.")
+
+# Section 3 : Notions et Documentation technique intégrée
+with st.expander("📚 Comprendre les notions et l'architecture du projet"):
+    st.markdown("""
+    * **Bus CAN (Controller Area Network) :** Standard de réseau de véhicules robuste conçu pour permettre aux microcontrôleurs et aux appareils de communiquer entre eux sans hôte central.
+    * **Trame CAN :** Composée d'un identifiant (CAN ID) qui définit la priorité du message, d'un champ de données (DLC jusqu'à 8 octets) et d'un contrôle d'erreur.
+    * **Détection d'anomalies ML :** Utilisation d'algorithmes non supervisés ou supervisés (Isolation Forest, Autoencoders) pour repérer les déviations temporelles ou structurelles du bus.
+    """)
